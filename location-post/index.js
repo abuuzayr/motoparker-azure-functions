@@ -1,3 +1,5 @@
+const axios = require('axios') 
+
 // Load the server
 const db = require('../server')
 
@@ -5,8 +7,26 @@ const db = require('../server')
 const Location = require('../models/location')
 
 module.exports = async function (context, req) {
-    // check for auth cookie
-    if (req.headers && req.headers.cookie && req.headers.cookie.includes('AppServiceAuthSession=')) {
+    const authUrl = `https://${req.headers.host}/.auth/me`
+    let message, 
+        resCode, 
+        authorized = false
+
+    const options = {
+        headers: {
+            'X-ZUMO-AUTH': req.headers['x-zumo-auth'] ? req.headers['x-zumo-auth'] : ''
+        }
+    }
+
+    try {
+        const response = await axios.get(authUrl, options)
+        if (response.status === 200) authorized = true
+    } catch (e) {
+        resCode = e.response.status
+        message = e.response.statusText
+    }
+
+    if (authorized) {
         const locations = Array.isArray(req.body) ? req.body : [req.body]
         const existingLocations = locations.filter(location => location.hasOwnProperty('id'))
         const newLocations = locations.filter(location => !location.hasOwnProperty('id'))
@@ -35,13 +55,11 @@ module.exports = async function (context, req) {
             }))
 
             if (newLocations.length === 0) {
-                context.res = {
-                    status: 200,
-                    body: JSON.stringify({
-                        'success': success.join(', '),
-                        'errors': errored.join(', ')
-                    })
-                }
+                resCode = 200
+                message = JSON.stringify({
+                    'success': success.join(', '),
+                    'errors': errored.join(', ')
+                })
             } else {
                 // Bulk create new locations
                 await Location.create(
@@ -61,25 +79,21 @@ module.exports = async function (context, req) {
                         }
                     }
                 )
-                context.res = {
-                    status: 201,
-                    body: JSON.stringify({
-                        'success': success.join(', '),
-                        'errors': errored.join(', ')
-                    })
-                }
+                resCode = 201
+                message = JSON.stringify({
+                    'success': success.join(', '),
+                    'errors': errored.join(', ')
+                })
             }
         } catch (err) {
             console.log('location-post', err) // output to netlify function log
-            context.log({
-                status: 400,
-                body: JSON.stringify({ msg: err.message })
-            })
+            resCode = 400,
+            message = JSON.stringify({ msg: err.message })
         }
-    } else {
-        context.res = {
-            status: 401,
-            body: "Not authorized"
-        }
+    }
+
+    context.res = {
+        status: resCode,
+        body: message
     }
 };
