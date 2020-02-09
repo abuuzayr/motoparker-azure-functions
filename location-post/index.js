@@ -6,7 +6,7 @@ const Location = require('../models/location')
 
 module.exports = async function (context, req) {
     // check for auth cookie
-    if (req.headers.cookie.includes('AppServiceAuthSession=')) {
+    if (req.headers && req.headers.cookie && req.headers.cookie.includes('AppServiceAuthSession=')) {
         const locations = Array.isArray(req.body) ? req.body : [req.body]
         const existingLocations = locations.filter(location => location.hasOwnProperty('id'))
         const newLocations = locations.filter(location => !location.hasOwnProperty('id'))
