@@ -34,7 +34,7 @@ module.exports = async function (context, req) {
 
         if (newLocations.length === 0) {
             context.res = {
-                status: 201,
+                status: 200,
                 body: JSON.stringify({
                     'success': success.join(', '),
                     'errors': errored.join(', ')
