@@ -10,7 +10,8 @@ const LocationSchema = mongoose.Schema({
     free: { type: Boolean, default: true },
     lat: { type: Number, required: true },
     lng: { type: Number, required: true },
-    active: { type: Boolean, default: true }
+    active: { type: Boolean, default: true },
+    images: { type: [String], default: [] }
 }, {
     timestamps: true
 });
