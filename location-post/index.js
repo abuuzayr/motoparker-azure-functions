@@ -36,7 +36,6 @@ module.exports = async function (context, req) {
         try {
             // Handle existing locations
             await Promise.all(existingLocations.map(async location => {
-                console.log(location)
                 const updatedLocation = await Location.findOneAndUpdate(
                     { _id: location.id },
                     location
